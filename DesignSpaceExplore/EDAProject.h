@@ -1,4 +1,5 @@
 ﻿#pragma once
 
-#include "Utils.h"
+#include "LoopUnrollingStructs.h"
 #include "LoopUnrolling.h"
+

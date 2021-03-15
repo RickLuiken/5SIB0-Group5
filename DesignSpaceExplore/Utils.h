@@ -40,17 +40,6 @@ int getLargestPower(int input, int base);
 vector<int> getPowerVector(int max, int power);
 
 
-// ------ Structs and Constants ------ //
-
-struct LoopInfo
-{
-	int unrollFactor;
-	int loopBound;
-	float criticalPathLatency;
-	LoopInfo* childLoop;
-};
-
-
 // ------ Small utility functions ------ //
 
 template <typename T>

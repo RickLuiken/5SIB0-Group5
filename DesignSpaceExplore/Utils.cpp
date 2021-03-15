@@ -1,6 +1,5 @@
 #include "Utils.h"
 
-
 void testMe()
 {
 	cout << "I've been tested :o" << endl;
@@ -8,7 +7,6 @@ void testMe()
 
 void printVector(vector<int> vector)
 {
-	cout << "Vector: ";
 	for (int entrie : vector)
 	{
 		cout << entrie << ", ";
