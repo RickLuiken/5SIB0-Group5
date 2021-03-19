@@ -1,4 +1,5 @@
 #include "Pass.h"
+#include "Utils.h"
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
 #include "llvm/Support/raw_ostream.h"
@@ -10,36 +11,85 @@ float computeCriticalPath() {
 
 }
 
-void LoopUnrollPass::print_loop_trip_count(Loop *L, ScalarEvolution &SE) {
+float LoopUnrollPass::get_estimated_latencies(loop_unroll_info &L) {
+    float inner_impact = 0.0;
+	float outer_unroll_factor = L.unroll_factor;
+    // TODO: CHANGE THIS TO A FUNCTION CALL
+	float outer_critical_path_latency = 10.0;
+
+	errs() << outer_unroll_factor << ", ";
+
+	for (auto &SL : L.sub_loops) {
+		float inner_latency = get_estimated_latencies(innerLoop);
+
+		inner_impact += inner_latency * (SL.trip_count / SL.unroll_factor);	
+	}
+    errs() << std::endl;
+
+	return inner_impact * outer_unroll_factor + outer_critical_path_latency;
+}
+
+
+bool LoopUnrollPass::find_unroll_factors(loop_unroll_info &L, loop_unroll_info &top_loop) {
+    for (auto unroll_factor : L.unroll_options) {
+        L.unroll_factor = unroll_factor;
+        
+        for (auto &SL : L.sub_loops) {
+            find_unroll_factors(SL, top_loop);
+        }
+
+        errs() << "UF: ";
+
+        float latency = estimateLoopLatency(top_loop);
+
+        errs() << "LL: " << latency << std::endl;
+    }
+}
+
+
+void LoopUnrollPass::find_unroll_factors() {
+    for (auto &L : loops) {
+        find_unroll_factors(*L, *L);
+    }
+}
+
+
+std::unique_ptr<loop_unroll_info> LoopUnrollPass::set_loop_unroll_info(Loop *L, ScalarEvolution &SE) {
+    // find the trip count
     unsigned int trip_count = SE.getSmallConstantTripCount(L);
-    errs() << "Loop at depth " << L->getLoopDepth();
-    if (trip_count == 0) {
-        // loop trip count cannot be analyzed
-        errs() << " does not have a constant trip count\n";
-    } else {
-        errs() << " has trip count " << SE.getSmallConstantTripCount(L) << "\n";
-    }
+
+    // create a smart pointer to the loop unroll info struct
+    std::unique_ptr<loop_unroll_info> loop_info(new loop_unroll_info {
+            trip_count,
+            getPowerVector(trip_count, 2),
+            L,
+            std::vector<std::unique_ptr<loop_unroll_info>>{}
+        }
+    );
     for (Loop *SL : L->getSubLoops()) {
-        // recursively find subloops and print the trip count
-        print_loop_trip_count(SL, SE);
+        // recursively find subloops
+        loop_info->sub_loops.push_back(set_loop_unroll_info(SL, SE));
     }
+    return loop_info;
 }
 
 
-void LoopUnrollPass::print_loop_trip_count(LoopInfo &LI, ScalarEvolution &SE) {
+void LoopUnrollPass::set_loop_unroll_info(LoopInfo &LI, ScalarEvolution &SE) {
     for (Loop *L : LI) {
-        print_loop_trip_count(L, SE);
+        loops.push_back(set_loop_unroll_info(L, SE));
     }
 }
 
-/**
- * Entry point of the pass.
- */
+
 PreservedAnalyses LoopUnrollPass::run(Function &F, FunctionAnalysisManager &AM) {
     // get the loop analysis and trip count information
     LoopInfo &LI = AM.getResult<LoopAnalysis>(F);
     ScalarEvolution &SE = AM.getResult<ScalarEvolutionAnalysis>(F);
-    print_loop_trip_count(LI, SE);
+
+    // set the vector of loop unroll info structs
+    set_loop_unroll_info(LI, SE);
+
+
     return PreservedAnalyses::all();
 }
 
