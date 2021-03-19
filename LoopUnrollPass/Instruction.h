@@ -68,6 +68,7 @@ public:
         InsertValue,
         LandingPad
     };
+    int getLatency();
 
 
 private:
