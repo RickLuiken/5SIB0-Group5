@@ -11,120 +11,110 @@ Instruction(Type type) {
 int getLatency() {
     switch (this.type) {
         case Ret:
-            break;
+            return 0;
         case Br:
-            break;
+            return 0;
         case Switch:
-            break;
+            return 0;
         case IndirectBr:
-            break;
+            return 0;
         case Invoke:
-            break;
+            return 0;
         case Resume:
-            break;
+            return 0;
         case Unreachable:
-            break;
+            return 0;
         case Add:
-            break;
         case Sub:
-            break;
+            return this.INT_ADD;
         case FAdd:
-            break;
         case FSub:
-            break;
+            return this.FP_ADD;
         case Mul:
-            break;
+            return 0;
         case FMul:
-            break;
+            return this.FP_MULT;
         case SDiv:
-            break;
+            return 0;
         case SRem:
-            break;
+            return 0;
         case UDiv:
-            break;
+            return 0;
         case URem:
-            break;
+            return 0;
         case FDiv:
-            break;
+            return 0;
         case FRem:
-            break;
+            return 0;
         case Shl:
-            break;
         case LShr:
-            break;
         case AShr:
-            break;
+            return this.SHIFT;
         case And:
-            break;
         case Or:
-            break;
         case Xor:
-            break;
+            return this.INT_ADD;
         case Alloca:
-            break;
+            return 0;
         case Load:
-            break;
+            return 0;
         case Store:
-            break;
+            return 0;
         case GetElementPtr:
-            break;
+            return 0;
         case Fence:
-            break;
+            return 0;
         case AtomicCmpXchg:
-            break;
+            return 0;
         case AtomicRMW:
-            break;
+            return 0;
         case Trunc:
-            break;
+            return 0;
         case ZExt:
-            break;
+            return 0;
         case SExt:
-            break;
+            return 0;
         case FPTrunc:
-            break;
+            return 0;
         case FPExt:
-            break;
+            return 0;
         case PtrToInt:
-            break;
         case IntToPtr:
-            break;
         case BitCast:
-            break;
+            return this.CAST_LATENCY;
         case FPToUI:
-            break;
         case FPToSI:
-            break;
+            return this.FP_TO_SI;
         case UIToFP:
-            break;
         case SIToFP:
-            break;
+            return this.SI_TO_FP;
         case ICmp:
-            break;
+            return this.ICMP_LATENCY;
         case FCmp:
-            break;
+            return this.FCMP_LATENCY;
         case PHI:
-            break;
+            return 0;
         case Call:
-            break;
+            return 0;
         case Select:
-            break;
+            return 0;
         case UserOp1:
-            break;
+            return 0;
         case UserOp2:
-            break;
+            return 0;
         case VAArg:
-            break;
+            return 0;
         case ExtractElement:
-            break;
+            return 0;
         case InsertElement:
-            break;
+            return 0;
         case ShuffleVector:
-            break;
+            return 0;
         case ExtractValue:
-            break;
+            return 0;
         case InsertValue:
-            break;
+            return 0;
         case LandingPad:
-            break;
+            return 0;
     }
 }

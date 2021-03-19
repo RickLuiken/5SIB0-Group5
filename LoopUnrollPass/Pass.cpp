@@ -6,6 +6,9 @@
 
 using namespace llvm;
 
+float computeCriticalPath() {
+
+}
 
 void LoopUnrollPass::print_loop_trip_count(Loop *L, ScalarEvolution &SE) {
     unsigned int trip_count = SE.getSmallConstantTripCount(L);
