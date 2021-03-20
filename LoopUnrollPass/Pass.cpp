@@ -1,4 +1,5 @@
 #include "Pass.h"
+#include "Latency.h"
 #include "Utils.h"
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
@@ -12,6 +13,7 @@ int unroll_factors[] = {16, 16, 16, 16};
 
 
 float LoopUnrollPass::compute_inner_loop_latency(Loop &L) {
+    float latency = 0.0;
     for (BasicBlock *BB : L.blocks()) {
         // check if BB is contained in the subloop
         bool bb_in_sub_loop = false;
@@ -27,11 +29,11 @@ float LoopUnrollPass::compute_inner_loop_latency(Loop &L) {
         }
 
         // BB is not contained in a subloop
-        for (Instruction &inst : *BB) {
-            inst.dump();
+        for (const Instruction &inst : *BB) {
+            latency += getLatency(&inst);
         }
     }
-    return 10.0;
+    return latency;
 }
 
 

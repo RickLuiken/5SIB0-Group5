@@ -6,7 +6,7 @@
 
 #include "llvm/IR/Instruction.h"
 
-int getLatency(llvm::Instruction *I);
+float getLatency(const llvm::Instruction *I);
 
 static const float INT_ADD = 0.2;
 static const float INT_MULT = 1.4;    //actual 1.0, cannot chain with load and store. cannot chain with small operations either.

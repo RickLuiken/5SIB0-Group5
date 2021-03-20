@@ -22,3 +22,15 @@ int getLargestPower(int input, int base);
 * @return list of powers in vector<int> form
 */
 std::vector<int> getPowerVector(int max, int power);
+
+
+/**
+ * Returns whether the value is a power of 2
+ */
+bool is_power_of_2(int val);
+
+
+/**
+ * Returns the closest power of 2 to the value
+ */
+int closest_power_of_2(int val);
