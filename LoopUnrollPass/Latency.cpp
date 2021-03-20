@@ -11,7 +11,7 @@
 using namespace llvm;
 
 
-float get_latency(const Instruction *I) {
+float get_instruction_latency(const Instruction *I) {
     if (!I) return 0;
 
     switch (I->getOpcode()) {

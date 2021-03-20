@@ -30,7 +30,7 @@ float LoopUnrollPass::compute_inner_loop_latency(Loop &L) {
 
         // BB is not contained in a subloop
         for (const Instruction &inst : *BB) {
-            latency += getLatency(&inst);
+            latency += get_instruction_latency(&inst);
         }
     }
     return latency;
