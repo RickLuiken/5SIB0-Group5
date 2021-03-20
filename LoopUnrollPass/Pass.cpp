@@ -7,49 +7,76 @@
 
 using namespace llvm;
 
-float computeCriticalPath() {
 
+int unroll_factors[] = {16, 16, 16, 16};
+
+
+float LoopUnrollPass::compute_inner_loop_latency(Loop &L) {
+    for (BasicBlock *BB : L.blocks()) {
+        // check if BB is contained in the subloop
+        bool bb_in_sub_loop = false;
+        for (Loop *SL : L.getSubLoops()) {
+            if (SL->contains(BB)) {
+                bb_in_sub_loop = true;
+                break;
+            }
+        }
+        
+        if (bb_in_sub_loop) {
+            break;
+        }
+
+        // BB is not contained in a subloop
+        for (Instruction &inst : *BB) {
+            inst.dump();
+        }
+    }
+    return 10.0;
 }
 
-float LoopUnrollPass::get_estimated_latencies(loop_unroll_info &L) {
+
+float LoopUnrollPass::get_estimated_latency(loop_unroll_info &L) {
     float inner_impact = 0.0;
 	float outer_unroll_factor = L.unroll_factor;
     // TODO: CHANGE THIS TO A FUNCTION CALL
-	float outer_critical_path_latency = 10.0;
 
 	errs() << outer_unroll_factor << ", ";
 
 	for (auto &SL : L.sub_loops) {
-		float inner_latency = get_estimated_latencies(innerLoop);
+		float inner_latency = get_estimated_latency(*SL);
 
-		inner_impact += inner_latency * (SL.trip_count / SL.unroll_factor);	
+		inner_impact += inner_latency * (SL->trip_count / SL->unroll_factor);	
 	}
-    errs() << std::endl;
+
+    
+	float outer_critical_path_latency = compute_inner_loop_latency(*(L.loop));
+    errs() << "\n";
 
 	return inner_impact * outer_unroll_factor + outer_critical_path_latency;
 }
 
 
-bool LoopUnrollPass::find_unroll_factors(loop_unroll_info &L, loop_unroll_info &top_loop) {
-    for (auto unroll_factor : L.unroll_options) {
-        L.unroll_factor = unroll_factor;
-        
-        for (auto &SL : L.sub_loops) {
-            find_unroll_factors(SL, top_loop);
-        }
+void LoopUnrollPass::find_unroll_factors(loop_unroll_info &L) {
+    static int n = 0;
 
-        errs() << "UF: ";
-
-        float latency = estimateLoopLatency(top_loop);
-
-        errs() << "LL: " << latency << std::endl;
+    L.unroll_factor = unroll_factors[n++];
+    
+    for (auto &SL : L.sub_loops) {
+        find_unroll_factors(*SL);
     }
 }
 
 
 void LoopUnrollPass::find_unroll_factors() {
     for (auto &L : loops) {
-        find_unroll_factors(*L, *L);
+        find_unroll_factors(*L);
+
+        errs() << "UF: ";
+
+        // calculation of the recursion in the paper
+        float latency = get_estimated_latency(*L) * L->trip_count / L->unroll_factor;
+
+        errs() << "LL: " << latency << "\n";
     }
 }
 
@@ -62,6 +89,7 @@ std::unique_ptr<loop_unroll_info> LoopUnrollPass::set_loop_unroll_info(Loop *L, 
     std::unique_ptr<loop_unroll_info> loop_info(new loop_unroll_info {
             trip_count,
             getPowerVector(trip_count, 2),
+            1,
             L,
             std::vector<std::unique_ptr<loop_unroll_info>>{}
         }
@@ -88,6 +116,7 @@ PreservedAnalyses LoopUnrollPass::run(Function &F, FunctionAnalysisManager &AM) 
 
     // set the vector of loop unroll info structs
     set_loop_unroll_info(LI, SE);
+    find_unroll_factors();
 
 
     return PreservedAnalyses::all();

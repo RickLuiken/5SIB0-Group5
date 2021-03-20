@@ -20,6 +20,24 @@ class LoopUnrollPass : public llvm::PassInfoMixin<LoopUnrollPass> {
 
 
     /**
+     * Compute the latency of a single iteration of the loop (subloops excluded)
+     */
+    float compute_inner_loop_latency(llvm::Loop &L);
+
+
+    /**
+     * Estimate the latency for a single top level loop
+     */
+    float get_estimated_latency(loop_unroll_info &L);
+
+
+    /**
+     * Find the unroll factors for a single top level loop
+     */
+    void find_unroll_factors(loop_unroll_info &L);
+
+
+    /**
      * Find the unroll factors for the loops with the least amount of latency
      */
     void find_unroll_factors();
