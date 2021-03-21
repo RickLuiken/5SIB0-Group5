@@ -9,7 +9,7 @@
 using namespace llvm;
 
 
-int unroll_factors[] = {16, 16, 16, 16};
+int unroll_factors[] = {1, 1, 1, 8};
 
 
 float LoopUnrollPass::compute_inner_loop_latency(Loop &L) {

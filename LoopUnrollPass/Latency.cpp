@@ -99,9 +99,9 @@ float get_instruction_latency(const Instruction *I) {
 
         // these are done seperately somewhere else
         case Instruction::Load:
-            return 0.0;
+            return 20.0;
         case Instruction::Store:
-            return 0.0;
+            return 20.0;
 
         case Instruction::GetElementPtr:
             return GEP_LATENCY;
