@@ -28,11 +28,11 @@ void kernel_gemm(int C[NI][NJ], int A[NI][NK],int B[NK][NJ])
  int nj=NJ;
  int nk=NK;
   kernel_gemm_label3:for (i = 0; i < ni; i++) {
-    for (j = 0; j < nj; j++){
+    kernel_gemm_label0:for (j = 0; j < nj; j++){
     	C[i][j] *= beta;
     }
-    for (k = 0; k < nk; k++) {
-       kernel_gemm_label1:for (j = 0; j < nj; j++){
+    kernel_gemm_label1:for (k = 0; k < nk; k++) {
+       kernel_gemm_label2:for (j = 0; j < nj; j++){
     	   C[i][j] += alpha * A[i][k] * B[k][j];
        }
     }

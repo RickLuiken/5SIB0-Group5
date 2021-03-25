@@ -4,16 +4,16 @@
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/CommandLine.h"
 
 
 using namespace llvm;
 
-
-int unroll_factors[] = {1, 1, 1, 8};
+int unroll_factors[] = {1,1,16,16};
 
 
 float LoopUnrollPass::compute_inner_loop_latency(Loop &L) {
-    float latency = 0.0;
+    float latency = 0;
     for (BasicBlock *BB : L.blocks()) {
         // check if BB is contained in the subloop
         bool bb_in_sub_loop = false;
@@ -29,9 +29,7 @@ float LoopUnrollPass::compute_inner_loop_latency(Loop &L) {
         }
 
         // BB is not contained in a subloop
-        for (const Instruction &inst : *BB) {
-            latency += get_instruction_latency(&inst);
-        }
+        latency += compute_critical_path_latency(*BB);
     }
     return latency;
 }
@@ -40,7 +38,6 @@ float LoopUnrollPass::compute_inner_loop_latency(Loop &L) {
 float LoopUnrollPass::get_estimated_latency(loop_unroll_info &L) {
     float inner_impact = 0.0;
 	float outer_unroll_factor = L.unroll_factor;
-    // TODO: CHANGE THIS TO A FUNCTION CALL
 
 	errs() << outer_unroll_factor << ", ";
 
@@ -51,7 +48,9 @@ float LoopUnrollPass::get_estimated_latency(loop_unroll_info &L) {
 	}
 
     
-	float outer_critical_path_latency = compute_inner_loop_latency(*(L.loop));
+	int outer_critical_path_latency = std::ceil(compute_inner_loop_latency(*(L.loop)) / 10) * 10;
+    L.loop->dump();
+    errs() << outer_critical_path_latency;
     errs() << "\n";
 
 	return inner_impact * outer_unroll_factor + outer_critical_path_latency;

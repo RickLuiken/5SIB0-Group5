@@ -4,15 +4,52 @@
 
 #include "Latency.h"
 #include "Utils.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/Support/raw_ostream.h"
+#include <map>
 
 
 using namespace llvm;
 
 
-float get_instruction_latency(const Instruction *I) {
+float compute_critical_path_latency(BasicBlock& BB) {
+    float max_latency = 0;
+    std::map<const Instruction *, float> schedule;
+
+    for (Instruction &inst : BB) {
+        for (User *user : inst.users()) {
+            Instruction *I = dyn_cast<Instruction>(user);
+            if (I && I->getParent() == &BB && !isa<PHINode>(I)) {
+                float latency = schedule[&inst] + get_instruction_latency(&inst);
+                float inst_latency = get_instruction_latency(I);
+                if (isa<LoadInst>(&inst)) {
+                    // load result is only available after one cycle
+                    int load_cycle = std::floor(latency / 10.0);
+                    int chain_cycle = std::floor((latency + inst_latency) / 10.0);
+                    if (load_cycle != chain_cycle) {
+                        latency = std::ceil(latency / 10.0) * 10.0;
+                    }
+                }
+                schedule[I] = std::max(schedule[I], latency);
+                max_latency = std::max(max_latency, schedule[I] + inst_latency);
+            }
+        }
+    }
+
+    for (const auto& [inst, t] : schedule) {
+        errs() << inst->getOpcodeName() << t << "\n";
+    }
+    return max_latency;
+}
+
+
+
+float get_instruction_latency(Instruction *I) {
     if (!I) return 0;
+
+    //errs() << I->getOpcodeName() << "\n";
 
     switch (I->getOpcode()) {
         // Terminator instructions
@@ -51,7 +88,7 @@ float get_instruction_latency(const Instruction *I) {
                     }
                 }
             } else {
-                // a mulitiplication has to be used
+                // a multiplication has to be used
                 return IMULT;
             }
         }
@@ -99,9 +136,9 @@ float get_instruction_latency(const Instruction *I) {
 
         // these are done seperately somewhere else
         case Instruction::Load:
-            return 20.0;
+            return 13.25;
         case Instruction::Store:
-            return 20.0;
+            return 3.25;
 
         case Instruction::GetElementPtr:
             return GEP_LATENCY;
